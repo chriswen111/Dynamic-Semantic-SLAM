@@ -1,0 +1,19 @@
+<launch>
+  <arg name="voc_file" default="/home/wen/orbslam_dense/src/orbslam3_dense_ros_rgbd/ORBSLAM3_Dense-main/MyExample/ORBvoc.txt" />
+  <arg name="settings_file" default="$(find orbslam3_dense)/MyExample/rgbdslam.yaml" />
+  <arg name="rgb_topic" default="/camera/color/image_raw" />
+  <arg name="depth_topic" default="/camera/aligned_depth_to_color/image_raw" />
+  <arg name="use_viewer" default="true" />
+  <arg name="queue_size" default="10" />
+  <arg name="sync_slop" default="0.03" />
+
+  <node pkg="orbslam3_dense" type="rgbd_ros" name="orbslam3_rgbd" output="screen" >
+    <param name="voc_file" value="$(arg voc_file)" />
+    <param name="settings_file" value="$(arg settings_file)" />
+    <param name="rgb_topic" value="$(arg rgb_topic)" />
+    <param name="depth_topic" value="$(arg depth_topic)" />
+    <param name="use_viewer" value="$(arg use_viewer)" />
+    <param name="queue_size" value="$(arg queue_size)" />
+    <param name="sync_slop" value="$(arg sync_slop)" />
+  </node>
+</launch>

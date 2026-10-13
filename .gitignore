@@ -1,0 +1,5 @@
+# Local ROS build output
+/build/
+/devel/
+# Downloaded datasets
+**/datasets/
