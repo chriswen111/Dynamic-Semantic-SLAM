@@ -1,5 +1,148 @@
 # Dynamic-Semantic-SLAM
 
+An ORB-SLAM3-based RGB-D SLAM project with dense point cloud reconstruction, external semantic mask input, and semantic OctoMap export. It provides an offline TUM RGB-D dataset runner and a ROS 1 RGB-D node.
+
+> This guide is based on the current source code. Compilation and execution have not yet been verified in a fresh Linux environment. 
+
+## 1. Dependencies
+
+The project targets Linux. Its ROS interface uses ROS 1 and catkin. The workspace path in the source references ROS Noetic; this does not establish compatibility with every dependency version.
+
+- CMake 3.15 or newer and a C++ compiler with C++14 support.
+- OpenCV, Eigen3, Pangolin, PCL, and OctoMap.
+- Boost filesystem, program_options, and serialization, plus OpenSSL development libraries.
+- DBoW2, g2o, ELAS, and Sophus source code is included in the repository.
+- ROS mode additionally requires roscpp, roslib, sensor_msgs, cv_bridge, image_transport, and message_filters.
+
+Make sure CMake can locate the installed dependencies. For custom installation directories, set `CMAKE_PREFIX_PATH` or package-specific variables such as `OpenCV_DIR` and `Pangolin_DIR`. In ROS mode, also check that OpenCV and cv_bridge use compatible versions.
+
+## 2. Download the Source and Extract the Vocabulary
+
+```bash
+git clone https://github.com/chriswen111/Dynamic-Semantic-SLAM.git
+cd Dynamic-Semantic-SLAM
+export SLAM_DIR="$PWD/src/orbslam3_dense_ros_rgbd/ORBSLAM3_Dense-main"
+cd "$SLAM_DIR"
+tar -xzf Vocabulary/ORBvoc.txt.tar.gz -C Vocabulary
+test -f Vocabulary/ORBvoc.txt
+```
+
+The following commands use `SLAM_DIR` in the same terminal session. Set it again to the actual project path when opening a new terminal.
+
+## 3. Build the Offline Dataset Runner
+
+After installing the dependencies and handling the Orbbec section above, build without catkin:
+
+```bash
+cd "$SLAM_DIR"
+cmake -S . -B build \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_DISABLE_FIND_PACKAGE_catkin=TRUE
+cmake --build build --target rgbd_tum -j2
+./MyExample/rgbd_tum --help
+```
+
+In this mode, the `rgbd_tum` executable is written to `MyExample/`. Adjust `-j2` according to available memory. The main CMake configuration also builds DBoW2, g2o, and ELAS.
+
+## 4. Run a TUM RGB-D Dataset
+
+Download and extract a dataset separately. The sequence directory must contain at least:
+
+```text
+sequence/
+├── rgb/
+├── depth/
+├── rgb.txt
+└── depth.txt
+```
+
+Each line in `rgb.txt` and `depth.txt` uses the format `timestamp relative_image_path`. The runner associates RGB and depth images by timestamp, with a default maximum difference of 0.02 seconds.
+
+Copy a camera configuration template:
+
+```bash
+cd "$SLAM_DIR"
+cp MyExample/rgbd_orb.yaml MyExample/my_camera.yaml
+```
+
+Update the camera intrinsics, distortion coefficients, image resolution, frame rate, `Camera.RGB`, and `RGBD.DepthMapFactor` in `my_camera.yaml` to match your dataset. The example settings are not suitable for every camera or sequence. `TUM1.yaml` is another reference, but its calibration must not be applied directly to Freiburg3 sequences. If you use it for dense reconstruction, also add the `PointCloudMapping.*` settings from `rgbd_orb.yaml`.
+
+The depth scale must match the input: dividing an integer depth value by `RGBD.DepthMapFactor` gives depth in meters. Typical values are 1000 for depth stored in millimeters, 5000 for standard TUM depth images, and 1 for floating-point depth already expressed in meters. Also check `PointCloudMapping.Unit` against the actual input and the source code's depth processing.
+
+First disable semantic input to check the basic RGB-D pipeline:
+
+```bash
+./MyExample/rgbd_tum \
+  --root_dir /absolute/path/to/sequence \
+  --param_path MyExample/my_camera.yaml \
+  --voc_path Vocabulary/ORBvoc.txt \
+  --enable_semantic false \
+  --trajectory CameraTrajectory.txt \
+  --keyframe_trajectory KeyFrameTrajectory.txt
+```
+
+Replace `/absolute/path/to/sequence` with your dataset directory. Add `--realtime true` to follow the intervals between dataset timestamps during playback.
+
+## 5. Provide Semantic Masks
+
+Each semantic mask must be a **16-bit, single-channel image (`CV_16UC1`)** with the same dimensions as its RGB image. The current code obtains class IDs using integer division, `pixelValue / 100`, and excludes pixel value 0 from that class test. Standard 8-bit class maps and colorized segmentation images cannot be used directly.
+
+Create `semantic/` and `semantic.txt` inside the sequence directory. Each line in `semantic.txt` should use this format:
+
+```text
+1341845822.925900 semantic/1341845822.925900.png
+```
+
+By default, the runner first looks for a mask in `semantic/` with the same filename as the RGB image, then attempts timestamp matching using `semantic.txt`. Once the files are ready, run:
+
+```bash
+./MyExample/rgbd_tum \
+  --root_dir /absolute/path/to/sequence \
+  --param_path MyExample/my_camera.yaml \
+  --voc_path Vocabulary/ORBvoc.txt \
+  --enable_semantic true \
+  --semantic_file semantic.txt \
+  --semantic_dir semantic
+```
+
+Check the `[SemanticDebug]` messages and the final `used` count to confirm that masks were actually loaded. Your dynamic class IDs must match the filtering logic in `src/Tracking.cc`.
+
+## 6. Use ROS 1 RGB-D Input
+
+Complete the catkin setup described in Section 3. Place the main project in a valid workspace as the `orbslam3_dense` package, build it, and source that workspace's `devel/setup.bash`. Confirm that `rospack find orbslam3_dense` locates the main project.
+
+Start the ROS master and your camera driver or rosbag data source. Ensure that depth images are aligned with RGB images and that the camera configuration matches the input. Then run:
+
+```bash
+roslaunch orbslam3_dense rgbd_ros2.launch \
+  voc_file:="$SLAM_DIR/Vocabulary/ORBvoc.txt" \
+  settings_file:="$SLAM_DIR/MyExample/my_camera.yaml" \
+  rgb_topic:=/camera/color/image_raw \
+  depth_topic:=/camera/aligned_depth_to_color/image_raw \
+  enable_semantic_mask:=false
+```
+
+Despite the `2` in its name, `rgbd_ros2.launch` is a ROS 1 launch file. The vocabulary path is explicitly overridden here because the launch file's default points to the original author's directory.
+
+To connect an external semantic node, set `enable_semantic_mask:=true` and `semantic_mask_topic:=/semantic_mask`. Mask messages must use `mono16` or `16UC1` encoding and have the same dimensions as the RGB images. The default synchronization tolerance, `sync_slop`, is 0.03 seconds. When semantic input is enabled, RGB, depth, and mask messages are all required to trigger processing.
+
+## 7. Outputs and Troubleshooting
+
+- The offline runner saves `CameraTrajectory.txt` and `KeyFrameTrajectory.txt` on exit. Relative output paths are resolved from the current working directory.
+- `PointCloudMapping.cc` saves `PointCloudmapping.ply`, `SemanticPointCloudmapping.ply`, and `SemanticOctoMap.ot`, along with a corresponding `.bt` file. Semantic outputs require a valid semantic point cloud. Update the hardcoded output paths before running.
+- Exit normally with `Ctrl+C` and wait for saving to finish instead of forcibly terminating the process.
+- **Missing `ORBvoc.txt`:** Check the extraction location and vocabulary argument.
+- **No images processed in ROS:** Check topics, timestamps, synchronization tolerance, and whether masks are being published when semantic input is enabled.
+- **`Semantic mask must be 16-bit single channel`:** Supply a 16-bit, single-channel mask and preserve the original label encoding.
+- **CMake or linker errors:** Check dependency paths and the Orbbec SDK section.
+- **Incorrect point cloud scale:** Check camera calibration, depth scale, and dense reconstruction settings.
+
+Datasets and locally generated `build/` and `devel/` directories are excluded from the repository. Continue to exclude downloaded data and large generated files from future commits.
+
+
+
+# Dynamic-Semantic-SLAM(中文)
+
 基于 ORB-SLAM3 的 RGB-D SLAM 项目，包含稠密点云重建、外部语义掩码输入和语义 OctoMap 保存功能。提供离线 TUM RGB-D 数据集入口及 ROS 1 RGB-D 节点。
 
 > 本说明根据当前源码整理，尚未在新的 Linux 环境中完成编译和运行验证。
