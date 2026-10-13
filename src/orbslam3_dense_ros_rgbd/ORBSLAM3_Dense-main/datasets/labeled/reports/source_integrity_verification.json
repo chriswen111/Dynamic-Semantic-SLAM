@@ -1,0 +1,10 @@
+{
+  "original_source_unchanged": true,
+  "checked_files": 5189,
+  "checks": [
+    "all file SHA256",
+    "size",
+    "last modified time",
+    "directory entry set"
+  ]
+}

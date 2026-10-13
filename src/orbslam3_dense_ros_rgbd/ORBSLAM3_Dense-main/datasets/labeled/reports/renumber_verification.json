@@ -1,0 +1,19 @@
+{
+  "before_images": 2594,
+  "after_images": 2592,
+  "deleted_original_numbers": [
+    1,
+    2
+  ],
+  "numbering": "000001 through 002592, previous number minus 2",
+  "all_remaining_image_mask_preview_bytes_preserved": true,
+  "all_remaining_json_content_preserved_except_imagePath": true,
+  "source_photos_and_manual_source_not_written": true,
+  "historical_backups_preserved": "D:\\1A_Files\\major\\paper\\SLAM\\CEA\\labeled\\backups_before_renumber_20261013",
+  "full_backup": "C:\\Users\\ASUS\\.codex\\.chatgpt-projects\\g-p-6a61c944e9fc8191879f096b34267177\\delete_1_2_renumber\\backup_before_delete_and_renumber",
+  "review_pages": 26,
+  "last_page_images": 92,
+  "web_visual_review_status_migration": true,
+  "changed_files_published": 15570,
+  "old_trailing_files_removed": 12
+}

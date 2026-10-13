@@ -1,0 +1,20 @@
+{
+  "total_color_images": 2592,
+  "sequence_counts": {
+    "1": 2026,
+    "2": 566
+  },
+  "identical_file_groups": 0,
+  "identical_pixel_groups": 0,
+  "file_duplicate_extra_images": 0,
+  "pixel_duplicate_extra_images": 0,
+  "similarity_candidate_count": 82,
+  "all_images_retained": false,
+  "naming": "color_image_000001.png onwards; sequence 1 then sequence 2",
+  "similarity_method": "64-bit grayscale dHash, best prior match with Hamming distance <=4; candidates only",
+  "removed_old_image_numbers": [
+    1,
+    2
+  ],
+  "remaining_images_retained": true
+}

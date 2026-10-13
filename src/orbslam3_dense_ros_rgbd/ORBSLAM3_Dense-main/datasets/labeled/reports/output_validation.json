@@ -1,0 +1,21 @@
+{
+  "images": 2592,
+  "pages": 26,
+  "png_masks": 2592,
+  "labelme_jsons": 2592,
+  "all_json_roundtrips_exact": true,
+  "output_class_order": [
+    "grape",
+    "branch",
+    "ground",
+    "leaf"
+  ],
+  "human_reviewed": false,
+  "all_masks_dimensions_and_ids_checked": true,
+  "renumbered_from_image_count": 2594,
+  "removed_original_image_numbers": [
+    1,
+    2
+  ],
+  "renumbering_validation_report": "renumber_mapping.csv"
+}

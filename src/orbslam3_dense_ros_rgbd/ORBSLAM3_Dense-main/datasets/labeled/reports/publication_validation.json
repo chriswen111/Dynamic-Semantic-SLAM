@@ -1,0 +1,16 @@
+{
+  "destination": "D:\\1A_Files\\major\\paper\\SLAM\\CEA",
+  "merged_images": 2592,
+  "labeled_images": 2592,
+  "labeled_jsons": 2592,
+  "labeled_masks": 2592,
+  "verified_files": 15591,
+  "every_copied_file_sha256_verified": true,
+  "existing_different_files_overwritten": false,
+  "renumbered_from_image_count": 2594,
+  "removed_original_image_numbers": [
+    1,
+    2
+  ],
+  "renumbering_validation_report": "renumber_mapping.csv"
+}

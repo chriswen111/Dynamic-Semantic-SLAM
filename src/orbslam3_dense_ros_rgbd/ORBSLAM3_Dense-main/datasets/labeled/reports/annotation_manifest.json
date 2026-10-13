@@ -1,0 +1,30 @@
+{
+  "model": "D:\\1A_Files\\major\\paper\\SLAM\\grape_slam_seg_v11\\yolov11n_exp-4\\weights\\best.pt",
+  "model_sha256": "271f17f23255e4c6973857dbdccaeabc32ac4765ee5e3ea3e7115043e3f2e319",
+  "model_names": {
+    "0": "grape",
+    "1": "branch",
+    "2": "leaf",
+    "3": "ground"
+  },
+  "output_class_order": [
+    "grape",
+    "branch",
+    "ground",
+    "leaf"
+  ],
+  "confidence_threshold": 0.25,
+  "mask_overlap_rule": "higher instance confidence wins",
+  "status": "AI_preannotations_pending_human_review",
+  "sam_refinement": false,
+  "independent_accuracy_metrics": false,
+  "images": 2592,
+  "zero_meaning": "unassigned, not verified background",
+  "instance_scores_are_not_pixel_probabilities": true,
+  "renumbered_from_image_count": 2594,
+  "removed_original_image_numbers": [
+    1,
+    2
+  ],
+  "renumbering_validation_report": "renumber_mapping.csv"
+}
