@@ -1,4 +1,0 @@
-grape
-branch
-ground
-leaf
